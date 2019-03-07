@@ -1,3 +1,5 @@
+import logging
+
 from redis import StrictRedis
 
 
@@ -42,6 +44,7 @@ class DevelopmentConfig(Config):
     """
     # 开启debug模式
     DEBUG = True
+    LOG_LEVEL = logging.DEBUG
 
 
 class ProductionConfig(Config):
@@ -50,6 +53,7 @@ class ProductionConfig(Config):
     """
     # 关闭debug模式
     DEBUG = False
+    LOG_LEVEL = logging.WARNING
 
 
 # 提供一个接口功供外界调用

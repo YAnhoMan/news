@@ -1,4 +1,6 @@
 # 业务文件夹
+import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from redis import StrictRedis
@@ -14,6 +16,24 @@ db = SQLAlchemy()
 redis_store = None  # type:StrictRedis
 
 
+# config_class配置类
+def wirte_log(config_class):
+    # 设置日志的记录等级
+    logging.basicConfig(level=config_class.LOG_LEVEL)  # 调试debug级
+
+    # 创建日志记录器，指明日志保存的路径、每个日志文件的最大大小100M、保存的日志文件个数上限
+    file_log_handler = RotatingFileHandler("logs/log", maxBytes=1024 * 1024 * 100, backupCount=10)
+
+    # 创建日志记录的格式 日志等级 输入日志信息的文件名 行数 日志信息
+    formatter = logging.Formatter('%(levelname)s %(filename)s:%(lineno)d %(message)s')
+
+    # 为刚创建的日志记录器设置日志记录格式
+    file_log_handler.setFormatter(formatter)
+
+    # 为全局的日志工具对象（flask app使用的）添加日志记录器
+    logging.getLogger().addHandler(file_log_handler)
+
+
 def create_app(config_name):
     # 初始化APP对象
     app = Flask(__name__)
@@ -27,12 +47,19 @@ def create_app(config_name):
     # 懒加载,延迟初始化db对象
     db.init_app(app)
 
+    #记录日志
+    wirte_log(config_class)
+
     # 创建redis数据库对象
     global redis_store
     redis_store = StrictRedis(host=config_class.REDIS_HOST, port=config_class.REDIS_PORT, decode_responses=True)
 
     # 设置CSRF保护
     CSRFProtect(app)
+
+    # 注册蓝图
+    from info.moduls.index import index_bp
+    app.register_blueprint(index_bp)
 
     # 设置session保存在redis里面
     Session(app)
