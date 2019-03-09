@@ -59,7 +59,9 @@ def create_app(config_name):
 
     # 注册蓝图
     from info.moduls.index import index_bp
+    from info.moduls.passport import passport_bp
     app.register_blueprint(index_bp)
+    app.register_blueprint(passport_bp)
 
     # 设置session保存在redis里面
     Session(app)
