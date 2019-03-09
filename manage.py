@@ -1,9 +1,8 @@
-import logging
-
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 import pymysql
 from info import create_app, db, redis_store
+from info.models import *
 pymysql.install_as_MySQLdb()
 
 """
