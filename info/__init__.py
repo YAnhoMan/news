@@ -55,7 +55,7 @@ def create_app(config_name):
     redis_store = StrictRedis(host=config_class.REDIS_HOST, port=config_class.REDIS_PORT, decode_responses=True)
 
     # 设置CSRF保护
-    CSRFProtect(app)
+    # CSRFProtect(app)
 
     # 注册蓝图
     from info.moduls.index import index_bp

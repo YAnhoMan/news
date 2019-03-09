@@ -173,6 +173,8 @@ function generateImageCode() {
 function sendSMSCode() {
     // 校验参数，保证输入框有数据填写
     $(".get_code").removeAttr("onclick");
+
+    //获取手机号码
     var mobile = $("#register_mobile").val();
     if (!mobile) {
         $("#register-mobile-err").html("请填写正确的手机号！");
@@ -180,6 +182,7 @@ function sendSMSCode() {
         $(".get_code").attr("onclick", "sendSMSCode();");
         return;
     }
+    //获取图形验证码
     var imageCode = $("#imagecode").val();
     if (!imageCode) {
         $("#image-code-err").html("请填写验证码！");
@@ -189,6 +192,54 @@ function sendSMSCode() {
     }
 
     // TODO 发送短信验证码
+    var params = {
+        'mobile':mobile,
+        'image_code': imageCode,
+        'image_code_id':imageCodeId,
+    }
+
+    json_str = JSON.stringify(params)
+    $.ajax({
+        url: '/passport/sms_code',
+        type: 'POST',
+        data: json_str,
+        //告诉后端上传的数据格式是json
+        contentType: 'application/json',
+        //接收后端的格式为json
+        dataType:'JSON',
+        success:function (resp) {
+            if (resp.errno == "0") {
+                // 倒计时60秒，60秒后允许用户再次点击发送短信验证码的按钮
+                var num = 60;
+                // 设置一个计时器
+                var t = setInterval(function () {
+                    if (num == 1) {
+                        // 如果计时器到最后, 清除计时器对象
+                        clearInterval(t);
+                        // 将点击获取验证码的按钮展示的文本回复成原始文本
+                        $(".get_code").html("获取验证码");
+                        // 将点击按钮的onclick事件函数恢复回去
+                        $(".get_code").attr("onclick", "sendSMSCode();");
+                    } else {
+                        num -= 1;
+                        // 展示倒计时信息
+                        $(".get_code").html(num + "秒");
+                    }
+                }, 1000)
+
+        }else{
+                $("#register-sms-code-err").html(resp.errmsg);
+                $("#register-sms-code-err").show();
+                $(".get_code").attr("onclick", "sendSMSCode();");
+                // 如果错误码是4004，代表验证码错误，重新生成验证码
+                if (resp.errno == "4004") {
+                    generateImageCode()
+                }
+            }
+        }
+
+    })
+
 }
 
 // 调用该函数模拟点击左侧按钮

@@ -33,33 +33,39 @@ def sent_sms_code():
     4.返回数据
     
     """
+    # 获取参数
     param_dict = request.json
     mobile = param_dict.get('mobile')
     image_code = param_dict.get('image_code')
     image_code_id = param_dict.get('image_code_id')
-
+    # 非空判断
     if not all([mobile, image_code, image_code_id]):
         current_app.logger.error('参数不足')
         err_dict = {'error': RET.PARAMERR, 'errmsg': '参数不足'}
         return jsonify(err_dict)
 
+    # 判断手机号码格式
     if not re.match(r'^1(3|4|5|7|8)\d{9}$', mobile):
         return jsonify(errno=RET.PARAMERR, errmsg='手机号码格式异常')
 
+    # 提取真实数据库的code
     try:
         real_image_code = redis_store.get('Image_Code_%s' % image_code_id)
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg='查询redis图形验证码异常')
 
+    # 如果存在,就删除redis里面的数据
     if real_image_code:
         redis_store.delete('Image_Code_%s' % image_code_id)
     else:
         return jsonify(errno=RET.NODATA, errmsg='图形验证码过期')
 
-    if image_code.lowwer() != real_image_code.lowwer():
+    # 比对两个码
+    if image_code.lower() != real_image_code.lower():
         return jsonify(errno=RET.DBERR, errmsg='查询redis图形验证码异常')
 
+    # 校验该手机是否已经注册
     try:
         user = User.query.filter(User.mobile == mobile).first()
     except Exception as e:
@@ -83,6 +89,7 @@ def sent_sms_code():
     redis_store.setex("SMS_CODE%s" % mobile, constants.SMS_CODE_REDIS_EXPIRES, real_sms_code)
 
     return jsonify(errno=RET.OK, errmsg='发送短信验证码成功')
+
 
 @passport_bp.route('/image_code')
 def get_image_code():
