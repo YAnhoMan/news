@@ -117,6 +117,30 @@ $(function(){
         }
 
         // 发起登录请求
+
+        var params = {
+            'mobile':mobile,
+            'password':password
+        }
+
+        $.ajax({
+            url:'/passport/login',
+            method: 'POST',
+            contentType: "application/json",
+            data:JSON.stringify(params),
+            success:function (resp) {
+                if (resp.errno == '0'){
+                    location.reload();
+                }
+                else {
+                    $("#login-password-err").html(resp.errmsg)
+                    $("#login-password-err").show()
+                }
+            }
+
+        })
+    }
+
     })
 
 
@@ -152,6 +176,28 @@ $(function(){
 
         // 发起注册请求
 
+        var params = {
+		    'mobile':mobile,
+            'password':password,
+            'sms_code':smscode,
+        }
+        $.ajax({
+            url:'/password/register',
+            method:'POST',
+            contentType: "application/json",
+            data:json.stringify(params),
+            success:function (resp) {
+                if (resp.errno == '0'){
+                    //刷新页面
+                    location.reload()
+                }
+                else {
+                $("#register-password-err").html(resp.errmsg);
+                $("#register-password-err").show()
+            }
+
+        })
+
     })
 })
 
@@ -173,8 +219,6 @@ function generateImageCode() {
 function sendSMSCode() {
     // 校验参数，保证输入框有数据填写
     $(".get_code").removeAttr("onclick");
-
-    //获取手机号码
     var mobile = $("#register_mobile").val();
     if (!mobile) {
         $("#register-mobile-err").html("请填写正确的手机号！");
@@ -182,7 +226,6 @@ function sendSMSCode() {
         $(".get_code").attr("onclick", "sendSMSCode();");
         return;
     }
-    //获取图形验证码
     var imageCode = $("#imagecode").val();
     if (!imageCode) {
         $("#image-code-err").html("请填写验证码！");
@@ -191,23 +234,26 @@ function sendSMSCode() {
         return;
     }
 
-    // TODO 发送短信验证码
+    // 发送短信验证码
+
     var params = {
-        'mobile':mobile,
-        'image_code': imageCode,
-        'image_code_id':imageCodeId,
+        "mobile": mobile,
+        "image_code": imageCode,
+        "image_code_id": imageCodeId
     }
 
-    json_str = JSON.stringify(params)
     $.ajax({
-        url: '/passport/sms_code',
-        type: 'POST',
-        data: json_str,
-        //告诉后端上传的数据格式是json
-        contentType: 'application/json',
-        //接收后端的格式为json
-        dataType:'JSON',
-        success:function (resp) {
+        // 请求地址
+        url: "/passport/sms_code",
+        // 请求方式
+        method: "POST",
+        // 请求内容
+        data: JSON.stringify(params),
+        // 请求内容的数据类型
+        contentType: "application/json",
+        // 响应数据的格式
+        dataType: "json",
+        success: function (resp) {
             if (resp.errno == "0") {
                 // 倒计时60秒，60秒后允许用户再次点击发送短信验证码的按钮
                 var num = 60;
@@ -226,10 +272,11 @@ function sendSMSCode() {
                         $(".get_code").html(num + "秒");
                     }
                 }, 1000)
-
-        }else{
+            } else {
+                // 表示后端出现了错误，可以将错误信息展示到前端页面中
                 $("#register-sms-code-err").html(resp.errmsg);
                 $("#register-sms-code-err").show();
+                // 将点击按钮的onclick事件函数恢复回去
                 $(".get_code").attr("onclick", "sendSMSCode();");
                 // 如果错误码是4004，代表验证码错误，重新生成验证码
                 if (resp.errno == "4004") {
@@ -237,9 +284,7 @@ function sendSMSCode() {
                 }
             }
         }
-
     })
-
 }
 
 // 调用该函数模拟点击左侧按钮

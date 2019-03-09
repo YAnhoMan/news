@@ -1,12 +1,13 @@
+import datetime
 import random
 import re
 
-from flask import request, abort, make_response, current_app, jsonify
+from flask import request, abort, make_response, current_app, jsonify, session
 
 from info.lib.yuntongxun.sms import CCP
 from info.models import User
 from info.utils.captcha.captcha import captcha
-from info import redis_store
+from info import redis_store, db
 from info import constants
 from info.response_code import RET
 
@@ -63,7 +64,7 @@ def sent_sms_code():
 
     # 比对两个码
     if image_code.lower() != real_image_code.lower():
-        return jsonify(errno=RET.DBERR, errmsg='查询redis图形验证码异常')
+        return jsonify(errno=RET.DBERR, errmsg='请输入正确的验证码')
 
     # 校验该手机是否已经注册
     try:
@@ -111,3 +112,100 @@ def get_image_code():
     response.headers['Content-Type'] = 'png/image'
 
     return response
+
+
+@passport_bp.route('/register', methods=["POST"])
+def register():
+    """
+    1. 获取参数和判断是否有值
+    2. 从redis中获取指定手机号对应的短信验证码的
+    3. 校验验证码
+    4. 初始化 user 模型，并设置数据并添加到数据库
+    5. 保存当前用户的状态
+    6. 返回注册的结果
+    :return:
+    """
+    param_dict = request.json
+    mobile = param_dict.get('mobile')
+    sms_code = param_dict.get('sms_code')
+    password = param_dict.get('password')
+
+    if not all([mobile, sms_code, password]):
+        return jsonify(errno=RET.PARAMERR, errmsg='参数不全')
+
+    try:
+        real_sms_code = redis_store.get("SMS_CODE%s" % mobile)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询短信验证码异常')
+
+    if real_sms_code:
+        redis_store.delete("SMS_CODE%s" % mobile)
+    else:
+        return jsonify(errno=RET.NODATA, errmsg='短信验证码过期')
+
+    if real_sms_code != sms_code:
+        return jsonify(errno=RET.DBERR, errmsg='请输入正确的短信验证码')
+
+    user = User()
+    user.mobile = mobile
+    user.nick_name = mobile
+    user.password = password
+
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DATAERR, errmsg="数据保存错误")
+
+    session['user_id'] = user.id
+    session['nick_'] = user.nick_name
+    session['mobile'] = user.mobile
+
+    return jsonify(errno=RET.OK, errmsg="OK")
+
+
+@passport_bp.route('/login', methods=["POST"])
+def login():
+    """
+    1. 获取参数和判断是否有值
+    2. 从数据库查询出指定的用户
+    3. 校验密码
+    4. 保存用户登录状态
+    5. 返回结果
+    :return:
+    """
+    param_dict = request.json
+    mobile = param_dict.get('mobile')
+    password = param_dict.get('password')
+
+    if not all([mobile, password]):
+        return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
+
+    try:
+        user = User.query.filter(User.mobile == mobile).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg='查询数据错误')
+
+    if not user:
+        return jsonify(errno=RET.USERERR, errmsg='用户不存在')
+
+    if user.password != password:
+        return jsonify(errno=RET.PWDERR, errmsg='密码错误')
+
+    session['user_id'] = user.id
+    session['nick_'] = user.nick_name
+    session['mobile'] = user.mobile
+
+    # 记录用户最后一次登录时间
+
+    try:
+        user.last_login = datetime.datetime.now()
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+
+    return jsonify(errno=RET.OK, errmsg="OK")

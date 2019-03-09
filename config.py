@@ -37,6 +37,9 @@ class Config(object):
     # 关闭数据库修改跟踪
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # 实现请求结束之后进行数据自动提交
+    SQLALCHEMY_COMMIT_ON_TEARDOWN = True
+
 
 class DevelopmentConfig(Config):
     """
