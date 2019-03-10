@@ -187,6 +187,9 @@ def login():
     if not all([mobile, password]):
         return jsonify(errno=RET.PARAMERR, errmsg='参数错误')
 
+    if not re.match(r'^1(3|4|5|7|8)\d{9}$', mobile):
+        return jsonify(errno=RET.PARAMERR, errmsg='手机号码格式异常')
+
     try:
         user = User.query.filter(User.mobile == mobile).first()
     except Exception as e:
