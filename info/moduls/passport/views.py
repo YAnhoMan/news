@@ -13,8 +13,21 @@ from info.response_code import RET
 
 from . import passport_bp
 
+
+# /passport/logout
+@passport_bp.route('/logout', methods=['POST'])
+def logout():
+    """
+       清除session中的对应登录之后保存的信息
+       :return:
+   """
+    session.pop('user_id', '')
+    session.pop('nick_name', '')
+    session.pop('mobile', '')
+    return jsonify(errno=RET.OK, errmsg="OK")
+
 # 参数通过请求体获得
-@passport_bp.route('/sms_code',methods=['POST'])
+@passport_bp.route('/sms_code', methods=['POST'])
 def sent_sms_code():
     """发送短信验证码后端接口"""
     """
@@ -199,7 +212,7 @@ def login():
     if not user:
         return jsonify(errno=RET.USERERR, errmsg='用户不存在')
 
-    if user.check_password(password):
+    if not user.check_password(password):
         return jsonify(errno=RET.PWDERR, errmsg='密码错误')
 
     session['user_id'] = user.id

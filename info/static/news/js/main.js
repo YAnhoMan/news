@@ -125,6 +125,9 @@ $(function(){
             url:"/passport/login",
             method: "post",
             data: JSON.stringify(params),
+            headers:{
+            "X-CSRFToken": getCookie("csrf_token")
+        },
             contentType: "application/json",
             success: function (resp){
                 if (resp.errno == "0") {
@@ -137,9 +140,6 @@ $(function(){
                 }
             }
         })
-
-
-
 
     })
 
@@ -184,6 +184,9 @@ $(function(){
             url:"/passport/register",
             type: "post",
             data: JSON.stringify(params),
+            headers:{
+            "X-CSRFToken": getCookie("csrf_token")
+        },
             contentType: "application/json",
             success: function (resp){
                 if (resp.errno == "0"){
@@ -241,13 +244,16 @@ function sendSMSCode() {
         'mobile':mobile,
         'image_code': imageCode,
         'image_code_id':imageCodeId,
-    }
+    };
 
-    json_str = JSON.stringify(params)
+    var json_str = JSON.stringify(params);
     $.ajax({
         url: '/passport/sms_code',
         type: 'POST',
         data: json_str,
+        headers:{
+            "X-CSRFToken": getCookie("csrf_token")
+        },
         //告诉后端上传的数据格式是json
         contentType: 'application/json',
         //接收后端的格式为json
@@ -321,4 +327,20 @@ function generateUUID() {
         return (c=='x' ? r : (r&0x3|0x8)).toString(16);
     });
     return uuid;
+}
+
+// 登出函数
+function logout() {
+    $.ajax({
+        url: "/passport/logout",
+        type: "POST",
+        contentType: "application/json",
+        headers: {
+            "X-CSRFToken": getCookie("csrf_token")
+        },
+        success: function (resp) {
+            // 刷新当前界面
+            location.reload()
+        }
+    })
 }
