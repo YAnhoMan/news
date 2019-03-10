@@ -133,6 +133,9 @@ def register():
     if not all([mobile, sms_code, password]):
         return jsonify(errno=RET.PARAMERR, errmsg='参数不全')
 
+    if not re.match(r'^1(3|4|5|7|8)\d{9}$', mobile):
+        return jsonify(errno=RET.PARAMERR, errmsg='手机号码格式异常')
+
     try:
         real_sms_code = redis_store.get("SMS_CODE%s" % mobile)
     except Exception as e:
@@ -193,7 +196,7 @@ def login():
     if not user:
         return jsonify(errno=RET.USERERR, errmsg='用户不存在')
 
-    if user.password != password:
+    if user.check_password(password):
         return jsonify(errno=RET.PWDERR, errmsg='密码错误')
 
     session['user_id'] = user.id
