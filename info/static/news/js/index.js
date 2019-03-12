@@ -89,13 +89,13 @@ function updateNewsData() {
             }
 
             // 总页数赋值
-            total_page = resp.data.total_page
+            total_page = resp.data.total_page;
 
             // 请求下一页数据 页码累加
-            cur_page += 1
+            cur_page += 1;
 
             // 当数据加载完毕，需要将data_querying设置为false，方便下次请求下一页数据
-            data_querying = false
+            data_querying = false;
 
             // 显示数据
             for (var i=0;i<resp.data.news_dict_list.length;i++) {
