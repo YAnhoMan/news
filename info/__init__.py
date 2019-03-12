@@ -1,7 +1,7 @@
 # 业务文件夹
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask
+from flask import Flask, render_template, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import generate_csrf
 from redis import StrictRedis
@@ -11,6 +11,8 @@ from config import config_dict
 
 # 当APP对象为空的情况,并没有真正做数据库初始化操作
 db = SQLAlchemy()
+
+from info.common import user_login_data
 
 # redis数据库对象
 # 声明数据类型
@@ -61,8 +63,10 @@ def create_app(config_name):
     # 注册蓝图
     from info.moduls.index import index_bp
     from info.moduls.passport import passport_bp
+    from info.moduls.news import news_bp
     app.register_blueprint(index_bp)
     app.register_blueprint(passport_bp)
+    app.register_blueprint(news_bp)
 
     # 设置session保存在redis里面
     Session(app)
@@ -70,8 +74,16 @@ def create_app(config_name):
     @app.after_request
     def set_csrf_token(response):
         csrf_token = generate_csrf()
-        response.set_cookie('csrf_token',csrf_token)
+        response.set_cookie('csrf_token', csrf_token)
         return response
+
+    @app.errorhandler(404)
+    # @user_login_data
+    def abort_404():
+        data = {
+            'user_info': g.user_info
+        }
+        return render_template('news/404.html', data=data)
 
     return app
 
