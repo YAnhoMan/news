@@ -2,7 +2,7 @@ from sqlalchemy import and_
 
 from info import constants, db
 from info.common import user_login_data
-from info.models import News, tb_user_collection, Comment, CommentLike
+from info.models import News, tb_user_collection, Comment, CommentLike, User
 from info.moduls.news import news_bp
 from flask import render_template, current_app, jsonify, abort, g, session, request
 
@@ -24,6 +24,7 @@ def news_detail(news_id):
         abort(404)
 
     news.clicks += 1
+
     # 查询点击排行数据
     try:
         rank_news_list = News.query.order_by(News.clicks.desc()).limit(constants.CLICK_RANK_MAX_NEWS)
@@ -34,11 +35,17 @@ def news_detail(news_id):
     for rank_news in rank_news_list if rank_news_list else []:
         click_news_list.append(rank_news.to_basic_dict())
 
-    # 查询当前用户的具体信息,包括是否关注
-
+    # 查询当前用户的具体信息,包括是否收藏
+    # 赋予默认值,当出现额外情况时,就重新赋值
     is_collected = False
-    if g.user and news in g.user.collection_news:
-        is_collected = True
+    is_followed = False
+    if g.user:
+        if news in g.user.collection_news:
+            is_collected = True
+
+        # 关联对象可以直接进行filter
+        if news.user.followers.filter(User.id == g.user.id).count() > 0:
+            is_followed = True
 
     # 查询该文章的评论列表,加用户是否点赞
 
@@ -56,7 +63,7 @@ def news_detail(news_id):
             if len(comment_ids) > 0:
                 comments_user = CommentLike.query.filter(CommentLike.comment_id.in_(comment_ids),
                                                          CommentLike.user_id == g.user_id).all()  # 获取当前文章该用户的所有点赞记录
-                comment_like_ids = [comment.id for comment in comments_user]  # 从当前文章该用户的所有点赞记录中抽取评论id
+                comment_like_ids = [comment.comment_id for comment in comments_user]  # 从当前文章该用户的所有点赞记录中抽取评论id
         except Exception as e:
             current_app.logger.error(e)
             return jsonify(errno=RET.DBERR, errmsg="数据库查询错误")
@@ -64,7 +71,9 @@ def news_detail(news_id):
     comment_dict_list = []
     for each_comment in comment_list:
         comment_data = each_comment.to_dict()
-        comment_data['is_user_like'] = True if g.user and comment_data.id in comment_like_ids else False
+        comment_data['is_user_like'] = False
+        if g.user and comment_data['id'] in comment_like_ids:
+            comment_data['is_user_like'] = True
         comment_dict_list.append(comment_data)
 
     # for each_comment in comment_list:
@@ -88,7 +97,8 @@ def news_detail(news_id):
         'user_info': g.user_info,
         'click_news_list': click_news_list,
         'is_collected': is_collected,
-        'comment_list': comment_dict_list
+        'comment_list': comment_dict_list,
+        'is_followed': is_followed
 
     }
     return render_template("news/detail.html", data=data)

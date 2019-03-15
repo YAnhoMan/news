@@ -5,7 +5,7 @@ IMAGE_CODE_REDIS_EXPIRES = 300
 SMS_CODE_REDIS_EXPIRES = 300
 
 # 七牛空间域名 注意最后面要添加一个斜杠
-QINIU_DOMIN_PREFIX = "http://plvma4v2k.bkt.clouddn.com/"
+QINIU_DOMIN_PREFIX = "http://poaoejoi6.bkt.clouddn.com/"
 
 # 首页展示最多的新闻数量
 HOME_PAGE_MAX_NEWS = 10

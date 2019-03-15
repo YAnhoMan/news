@@ -126,7 +126,7 @@ $(function(){
                     comment_html += '</div>'
                     comment_html += '<div class="comment_time fl">' + comment.create_time + '</div>'
 
-                    comment_html += '<a href="javascript:;" class="comment_up fr" data-commentid="' + comment.id + '" data-newsid="' + comment.news_id + '">赞</a>'
+                    comment_html += '<a href="javascript:;" class="comment_up fr" data-commentid="' + comment.id + '" data-newsid="' + comment.news_id + '" data-likecount="0">赞</a>'
                     comment_html += '<a href="javascript:;" class="comment_reply fr">回复</a>'
                     comment_html += '<form class="reply_form fl" data-commentid="' + comment.id + '" data-newsid="' + comment.news_id + '">'
                     comment_html += '<textarea class="reply_input"></textarea>'
@@ -267,7 +267,7 @@ $(function(){
                     comment_html += '</div>'
                     comment_html += '<div class="comment_time fl">' + comment.create_time + '</div>'
 
-                    comment_html += '<a href="javascript:;" class="comment_up fr" data-commentid="' + comment.id + '" data-newsid="' + comment.news_id + '">赞</a>'
+                    comment_html += '<a href="javascript:;" class="comment_up fr" data-commentid="' + comment.id + '" data-newsid="' + comment.news_id + '" data-likecount="0">赞</a>'
                     comment_html += '<a href="javascript:;" class="comment_reply fr">回复</a>'
                     comment_html += '<form class="reply_form fl" data-commentid="' + comment.id + '" data-newsid="' + comment.news_id + '">'
                     comment_html += '<textarea class="reply_input"></textarea>'

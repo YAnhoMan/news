@@ -64,9 +64,11 @@ def create_app(config_name):
     from info.moduls.index import index_bp
     from info.moduls.passport import passport_bp
     from info.moduls.news import news_bp
+    from info.moduls.profile import profile_bp
     app.register_blueprint(index_bp)
     app.register_blueprint(passport_bp)
     app.register_blueprint(news_bp)
+    app.register_blueprint(profile_bp)
 
     # 设置session保存在redis里面
     Session(app)
@@ -78,11 +80,10 @@ def create_app(config_name):
         return response
 
     @app.errorhandler(404)
-    # @user_login_data
-    def abort_404():
-        data = {
-            'user_info': g.user_info
-        }
+    @user_login_data
+    # 装饰器会传入参数,要进行接收,但可以不使用
+    def page_not_found(_):
+        data = {"user_info": g.user_info if g.user else None}
         return render_template('news/404.html', data=data)
 
     return app
