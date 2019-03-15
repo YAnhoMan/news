@@ -40,7 +40,8 @@ def get_news_list():
         current_app.logger.error(e)
         return jsonify(errno=RET.PARAMERR, errmsg="参数格式错误")
 
-    filter_list = []
+    # 这个是条件列表,需要变动的条件可以在此加入
+    filter_list = [News.status == 0]
 
     if cid != 1:
         filter_list.append(News.category_id == cid)

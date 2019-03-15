@@ -26,7 +26,7 @@ $(function(){
                 'X-CSRFToken': getCookie('csrf_token')
             },
             data:JSON.stringify({
-                'news_id':$('.collection').attr('data-newid'),
+                'news_id':$('.collection').attr('data-newsid'),
                 'action': 'collect'
             })
                 ,
@@ -57,7 +57,7 @@ $(function(){
                 'X-CSRFToken': getCookie('csrf_token')
             },
             data:JSON.stringify({
-                'news_id':$('.collection').attr('data-newid'),
+                'news_id':$('.collection').attr('data-newsid'),
                 'action': 'cancel_collect'
             }),
             success:function (resp) {
@@ -290,11 +290,68 @@ $(function(){
 
         // 关注当前新闻作者
     $(".focus").click(function () {
-
+        var user_id = $(this).attr('data-userid');
+        $.ajax({
+        url: "/news/followed_user",
+        type: "post",
+        contentType: "application/json",
+        headers: {
+            "X-CSRFToken": getCookie("csrf_token")
+        },
+        data: JSON.stringify({
+            'user_id':user_id,
+            'action':'follow'
+        }),
+        success: function (resp) {
+            if (resp.errno == "0") {
+                // 关注成功
+                var count = parseInt($(".follows b").html());
+                count++;
+                $(".follows b").html(count + "")
+                $(".focus").hide()
+                $(".focused").show()
+            }else if (resp.errno == "4101"){
+                // 未登录，弹出登录框
+                $('.login_form_con').show();
+            }else {
+                // 关注失败
+                alert(resp.errmsg)
+            }
+        }
+    })
     })
 
     // 取消关注当前新闻作者
     $(".focused").click(function () {
-
+        var user_id = $(this).attr('data-userid')
+    var params = {
+        "action": "unfollow",
+        "user_id": user_id
+    }
+    $.ajax({
+        url: "/news/followed_user",
+        type: "post",
+        contentType: "application/json",
+        headers: {
+            "X-CSRFToken": getCookie("csrf_token")
+        },
+        data: JSON.stringify(params),
+        success: function (resp) {
+            if (resp.errno == "0") {
+                // 取消关注成功
+                var count = parseInt($(".follows b").html());
+                count--;
+                $(".follows b").html(count + "")
+                $(".focus").show()
+                $(".focused").hide()
+            }else if (resp.errno == "4101"){
+                // 未登录，弹出登录框
+                $('.login_form_con').show();
+            }else {
+                // 取消关注失败
+                alert(resp.errmsg)
+            }
+        }
+    })
     })
 })

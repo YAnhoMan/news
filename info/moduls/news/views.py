@@ -76,21 +76,6 @@ def news_detail(news_id):
             comment_data['is_user_like'] = True
         comment_dict_list.append(comment_data)
 
-    # for each_comment in comment_list:
-    #     comment_data = each_comment.to_dict()
-    #     if g.user:
-    #         try:
-    #             is_like = CommentLike.query.filter(and_(CommentLike.comment_id == each_comment.id, CommentLike.user_id == g.user_id)).first()
-    #         except Exception as e:
-    #             current_app.logger.error(e)
-    #             return jsonify(errno=RET.DBERR, errmsg="查询数据库失败")
-    #
-    #         if is_like:
-    #             comment_data['is_user_like'] = True
-    #         else:
-    #             comment_data['is_user_like'] = False
-    #
-    #     comment_dict_list.append(comment_data)
 
     data = {
         'news': news.to_dict(),
@@ -238,3 +223,44 @@ def handler_comment_like():
 
     return jsonify(errno=RET.OK, errmsg="操作成功!")
 
+
+@news_bp.route('/followed_user', methods=['POST'])
+@user_login_data
+def followed_user():
+
+    if not g.user:
+
+        return jsonify(errno=RET.SESSIONERR, errmsg="用户未登录")
+
+    else:
+
+        user_id = request.json.get('user_id')
+
+        action = request.json.get('action')
+
+        if not all([user_id, action]) or action not in ["follow", "unfollow"]:
+            return jsonify(errno=RET.PARAMERR, errmsg="参数用户未登录")
+
+        try:
+            target_user = User.query.get(user_id)
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.DBERR, errmsg="查询数据库错误")
+
+        if not target_user:
+            return jsonify(errno=RET.PARAMERR, errmsg="目标用户未不存在")
+
+        if action == 'follow':
+            if target_user.followers.filter(User.id == g.user_id).count() > 0:
+                return jsonify(errno=RET.DATAEXIST, errmsg="当前已关注")
+            target_user.followers.append(g.user)
+        else:
+            if target_user.followers.filter(User.id == g.user.id).count() > 0:
+                target_user.followers.remove(g.user)
+        try:
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.DBERR, errmsg="数据保存错误")
+
+        return jsonify(errno=RET.OK, errmsg="操作成功")

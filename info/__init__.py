@@ -65,10 +65,12 @@ def create_app(config_name):
     from info.moduls.passport import passport_bp
     from info.moduls.news import news_bp
     from info.moduls.profile import profile_bp
+    from info.moduls.admin import admin_bp
     app.register_blueprint(index_bp)
     app.register_blueprint(passport_bp)
     app.register_blueprint(news_bp)
     app.register_blueprint(profile_bp)
+    app.register_blueprint(admin_bp)
 
     # 设置session保存在redis里面
     Session(app)

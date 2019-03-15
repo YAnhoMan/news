@@ -53,7 +53,7 @@
             <div class="comment_list">
                 <div class="person_pic fl">
                     <img src="{% if comment.user.avatar_url %}
-                    {{ comment.user_info.avatar_url }}
+                    {{ comment.user.avatar_url }}
                 {% else %}
                     ../../static/news/images/person01.png
                 {% endif %}" alt="用户图标">

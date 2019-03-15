@@ -21,9 +21,10 @@ def logout():
        清除session中的对应登录之后保存的信息
        :return:
    """
-    session.pop('user_id', '')
-    session.pop('nick_name', '')
-    session.pop('mobile', '')
+    session.pop('user_id', None)
+    session.pop('nick_name', None)
+    session.pop('mobile', None)
+    session.pop('is_admin', None)
     return jsonify(errno=RET.OK, errmsg="OK")
 
 # 参数通过请求体获得
