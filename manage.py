@@ -1,4 +1,3 @@
-
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 import pymysql
@@ -12,7 +11,7 @@ manager文件只去实现项目的启动和数据库的迁移,其他项目配置
 
 # 传入'development'就是开发环境
 # 传入'prodution'就是生产环境
-app = create_app('development')
+app = create_app('production')
 
 # 使得数据库具备迁移能力
 Migrate(app, db)
@@ -45,8 +44,6 @@ def createsuperuser(name, password):
     except Exception as e:
         print(e)
         db.session.rollback()
-
-
 
 
 if __name__ == '__main__':
